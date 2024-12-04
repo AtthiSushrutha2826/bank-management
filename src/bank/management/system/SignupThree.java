@@ -369,73 +369,71 @@ public class SignupThree extends JFrame implements ActionListener {
     
 
     public void actionPerformed(ActionEvent ae) {
-        if (ae.getSource() == submit) {
-            String accountType = null;
-            if (savingAccount.isSelected()) {
-                accountType = "Saving Account";
-            } else if (fixedDepositAccount.isSelected()) {
-                accountType = "Fixed Deposit Account";
-            } else if (currentAccount.isSelected()) {
-                accountType = "Current Account";
-            } else if (recurringDepositAccount.isSelected()) {
-                accountType = "Recurring Deposit Account";
-            }
-            
-            Random random = new Random();
-            String cardNumber = String.format("%016d", Math.abs(random.nextLong()) % 10000000000000000L);
-            String pinNumber = String.format("%04d", Math.abs(random.nextInt(10000)));
-
-
-            String services = "";
-            if (atmCard.isSelected()) {
-                services += " ATM Card";
-            }
-            if (internetBanking.isSelected()) {
-                services += " Internet Banking";
-            }
-            if (mobileBanking.isSelected()) {
-                services += " Mobile Banking";
-            }
-            if (emailSmsAlerts.isSelected()) {
-                services += " EMAIL & SMS Alerts";
-            }
-            if (chequeBook.isSelected()) {
-                services += " Cheque Book";
-            }
-            if (eStatement.isSelected()) {
-                services += " E-Statement";
-            }
-
-            
-            try {
-                if (accountType == null) {
-                    JOptionPane.showMessageDialog(null, "Account Type is Required");
-                } else if (!declaration.isSelected()) {
-                    JOptionPane.showMessageDialog(null, "Please declare that the details are correct");
-                } else {
-                    Conn c = new Conn();
-                    
-                    String query1= "INSERT INTO signupThree (accountType, services, cardNumber, pinNumber) VALUES('" + accountType + "', '" + services + "', '" + cardNumber + "', '" + pinNumber + "')";
-                    String query2 = "INSERT INTO login values('"+formno+"', '"+cardNumber+"', '"+pinNumber+"')";
-                    c.s.executeUpdate(query1);
-                    c.s.executeUpdate(query2);
-                    JOptionPane.showMessageDialog(null, "Account Created Successfully\nCard Number: " + cardNumber + "\nPIN: " + pinNumber);
-                    // Move to the next form or perform any other action
-                    // new SignupFour(formno); // Example if there's a next form
-                    // dispose();
-                    JOptionPane.showMessageDialog(null,"cardNumber: " + cardNumber + "\n Pin: " +pinNumber);
-                    setVisible(false);
-                    new Deposit(pinNumber).setVisible(false);
-             }
-            } catch (Exception e) {
-                System.out.println(e);
-            }
-        } else if (ae.getSource() == cancel) {
-            // Handle the cancel action, for example, close the form
-            setVisible(false);
-            new Login.setVisible(true);
+    if (ae.getSource() == submit) {
+        String accountType = null;
+        if (savingAccount.isSelected()) {
+            accountType = "Saving Account";
+        } else if (fixedDepositAccount.isSelected()) {
+            accountType = "Fixed Deposit Account";
+        } else if (currentAccount.isSelected()) {
+            accountType = "Current Account";
+        } else if (recurringDepositAccount.isSelected()) {
+            accountType = "Recurring Deposit Account";
         }
+        
+        Random random = new Random();
+        String cardNumber = String.format("%016d", Math.abs(random.nextLong()) % 10000000000000000L);
+        String pinNumber = String.format("%04d", Math.abs(random.nextInt(10000)));
+
+
+        String services = "";
+        if (atmCard.isSelected()) {
+            services += " ATM Card";
+        }
+        if (internetBanking.isSelected()) {
+            services += " Internet Banking";
+        }
+        if (mobileBanking.isSelected()) {
+            services += " Mobile Banking";
+        }
+        if (emailSmsAlerts.isSelected()) {
+            services += " EMAIL & SMS Alerts";
+        }
+        if (chequeBook.isSelected()) {
+            services += " Cheque Book";
+        }
+        if (eStatement.isSelected()) {
+            services += " E-Statement";
+        }
+
+        
+        try {
+            if (accountType == null) {
+                JOptionPane.showMessageDialog(null, "Account Type is Required");
+            } else if (!declaration.isSelected()) {
+                JOptionPane.showMessageDialog(null, "Please declare that the details are correct");
+            } else {
+                Conn c = new Conn();
+                
+                String query1 = "INSERT INTO signupThree (accountType, services, cardNumber, pinNumber) VALUES('" + accountType + "', '" + services + "', '" + cardNumber + "', '" + pinNumber + "')";
+                String query2 = "INSERT INTO login VALUES('" + formno + "', '" + cardNumber + "', '" + pinNumber + "')";
+                c.s.executeUpdate(query1);
+                c.s.executeUpdate(query2);
+                JOptionPane.showMessageDialog(null, "Account Created Successfully\nCard Number: " + cardNumber + "\nPIN: " + pinNumber);
+                // Move to the next form (Example: SignupFour)
+              
+                setVisible(false);
+            }
+        } catch (Exception e) {
+            System.out.println(e);
+        }
+    } else if (ae.getSource() == cancel) {
+        // Handle the cancel action, for example, close the form
+        setVisible(false);
+        new Login().setVisible(true); // Proper instantiation of Login
     }
+}
+
 
     public static void main(String[] args) {
         new SignupThree("");

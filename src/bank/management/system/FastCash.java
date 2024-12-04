@@ -4,7 +4,9 @@ import java.awt.*;
 import javax.swing.*;
 import java.awt.event.*;
 import java.sql.*;
+import java.text.SimpleDateFormat;
 import java.util.Date;
+
 public class FastCash extends JFrame implements ActionListener {
 
     JButton deposit, withdrawl, fastCash, miniStatement, pinChange, balanceEnquiry, exit;
@@ -28,7 +30,6 @@ public class FastCash extends JFrame implements ActionListener {
         text.setFont(new Font("System", Font.BOLD, 16));
         image.add(text);
 
-
         // Add buttons with new positions to fit the screen layout
         deposit = new JButton("RS 100");
         deposit.setBounds(170, 415, 150, 30);  // Adjusted position
@@ -47,7 +48,7 @@ public class FastCash extends JFrame implements ActionListener {
 
         miniStatement = new JButton("RS 2,000");
         miniStatement.setBounds(355, 450, 150, 30);  // Adjusted position
-        miniStatement.addActionListener( this);
+        miniStatement.addActionListener(this);
         image.add(miniStatement);
 
         pinChange = new JButton("RS 5,000");
@@ -72,43 +73,67 @@ public class FastCash extends JFrame implements ActionListener {
     }
 
     public void actionPerformed(ActionEvent ae) {
-        if (ae.getSource() == exit) {
+    if (ae.getSource() == exit) {
+        setVisible(false);
+        new Transactions(pinnumber).setVisible(true);
+    } else {
+        // Extract amount from button text
+        String amountText = ((JButton) ae.getSource()).getText().substring(3).replace(",", "").trim();
+
+        // Convert the extracted amount string to a double and then cast to integer
+        double amountDouble = 0;
+        try {
+            amountDouble = Double.parseDouble(amountText); // Handle floating-point values
+        } catch (NumberFormatException e) {
+            JOptionPane.showMessageDialog(null, "Invalid amount format.");
+            return;
+        }
+
+        // Convert to integer if the amount is whole (no decimal part)
+        int amount = (amountDouble == (int) amountDouble) ? (int) amountDouble : (int) (amountDouble + 0.5);  // Round if necessary
+
+        Conn c = new Conn();
+        try {
+            // Retrieve the balance
+            ResultSet rs = c.s.executeQuery("SELECT * FROM bank WHERE pinnumber = '" + pinnumber + "'");
+            int balance = 0;
+            while (rs.next()) {
+                if (rs.getString("transaction_type").equals("Deposit")) {
+                    balance += Integer.parseInt(rs.getString("amount"));
+                } else {
+                    balance -= Integer.parseInt(rs.getString("amount"));
+                }
+            }
+
+            // Check if balance is sufficient
+            if (balance < amount) {
+                JOptionPane.showMessageDialog(null, "Insufficient balance.");
+                return;
+            }
+
+            // Format the date to match MySQL DATETIME format
+            Date date = new Date();
+            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+            String formattedDate = sdf.format(date);
+
+            // Insert withdrawal record into the database
+            String query = "INSERT INTO bank (pinnumber, transaction_date, transaction_type, amount) VALUES ('" + pinnumber + "', '" + formattedDate + "', 'Withdrawal', '" + amount + "')";
+            c.s.executeUpdate(query);
+            JOptionPane.showMessageDialog(null, "Rs " + amount + " debited successfully.");
             setVisible(false);
             new Transactions(pinnumber).setVisible(true);
-        } else  {
-            String amount=((JButton)ae.getSource()).getText().substring(3);
-            Conn c=new Conn();
-            try{
-               ResultSet rs=c.s.executeQuery("select * from bank where pin= '"+pinnumber+"'");
-               int balance=0;
-               while(rs.next()){
-                   if(rs.getString("type").equals("deposit")){
-                       balance+=Integer.parseInt(rs.getString("amount"));
-                   }else{
-                       balance-=Integer.parseInt(rs.getString("amount"));
-                   }
-               }
-               if(ae.getSource()!=exit &&balance<Integer.parseInt(amount)){
-                   JOptionPane.showMessageDialog(null, "insufficient balance");
-                   return;
-                   
-               } 
-               Date date=new Date();
-              String query = "insert into bank values('"+pinnumber+"', '"+date+"', 'Withdrawl', '"+amount+"')";
+        } catch (Exception e) {
+            System.out.println(e);
+            JOptionPane.showMessageDialog(null, "An error occurred.");
+        }
+    }
+}
 
-               c.s.executeUpdate(query);
-               JOptionPane.showMessageDialog(null, "rs "+ amount + " debited Successfully" );
-               setVisible(false);
-               new Transactions(pinnumber).setVisible(true);
-               
-            }catch(Exception e){
-                System.out.println(e);
-            }
-            
-    }
-    }
+
+
     public static void main(String[] args) {
         new FastCash("");
     }
 }
+
 

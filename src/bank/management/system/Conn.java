@@ -1,4 +1,3 @@
-
 package bank.management.system;
 
 import java.sql.Connection;
@@ -11,11 +10,10 @@ public class Conn {
 
     public Conn() {
         try {
-            
             c = DriverManager.getConnection("jdbc:mysql:///bankmanagementsystem", "root", "Sushrutha@280206#");
             s = c.createStatement();
         } catch (Exception e) {
-            System.out.println(e);
+            e.printStackTrace();
         }
     }
 }

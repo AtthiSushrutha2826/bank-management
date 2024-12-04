@@ -76,6 +76,8 @@ public class MiniStatement extends JFrame implements ActionListener{
     }
     
 }*/
+//package bank.management.system;
+
 package bank.management.system;
 
 import java.awt.*;
@@ -115,7 +117,7 @@ public class MiniStatement extends JFrame implements ActionListener {
         // Retrieve Card Number
         try {
             Conn conn = new Conn();
-            ResultSet rs = conn.s.executeQuery("select * from login where pin = '" + pinnumber + "'");
+            ResultSet rs = conn.s.executeQuery("SELECT * FROM login WHERE pin = '" + pinnumber + "'");
             while (rs.next()) {
                 card.setText("Card Number:    " + rs.getString("cardnumber").substring(0, 4) + "XXXXXXXX" + rs.getString("cardnumber").substring(12));
             }
@@ -127,14 +129,15 @@ public class MiniStatement extends JFrame implements ActionListener {
         try {
             int bal = 0;
             Conn conn = new Conn();
-            ResultSet rs = conn.s.executeQuery("SELECT * FROM bank where pin = '" + pinnumber + "'");
+            ResultSet rs = conn.s.executeQuery("SELECT * FROM bank WHERE pinnumber = '" + pinnumber + "' ORDER BY transaction_date DESC");
             StringBuilder statement = new StringBuilder();
             while (rs.next()) {
-                statement.append("<html>").append(rs.getString("date")).append("&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;")
-                         .append(rs.getString("mode")).append("&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;")
+                statement.append("<html>")
+                         .append(rs.getString("transaction_date")).append("&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;")
+                         .append(rs.getString("transaction_type")).append("&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;")
                          .append(rs.getString("amount")).append("<br><br><html>");
                 
-                if (rs.getString("mode").equals("Deposit")) {
+                if (rs.getString("transaction_type").equals("Deposit")) {
                     bal += Integer.parseInt(rs.getString("amount"));
                 } else {
                     bal -= Integer.parseInt(rs.getString("amount"));
@@ -158,6 +161,6 @@ public class MiniStatement extends JFrame implements ActionListener {
     }
 
     public static void main(String[] args) {
-        new MiniStatement("").setVisible(true);
+        new MiniStatement("1234").setVisible(true); // Provide a valid pin for testing
     }
 }
