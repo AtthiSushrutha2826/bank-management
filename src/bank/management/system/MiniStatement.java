@@ -1,83 +1,3 @@
-/*
-package bank.management.system;
-
-import java.awt.*;
-import java.awt.event.*;
-import javax.swing.*;
-import java.sql.*;
-
-public class MiniStatement extends JFrame implements ActionListener{
- 
-    JButton b1, b2;
-    JLabel text;
-    MiniStatement(String pinnumber){
-        super("Mini Statement");
-        setLayout(null);
-        getContentPane().setBackground(Color.WHITE);
-        setSize(400,600);
-        setLocation(20,20);
-        
-       JLabel mini = new JLabel();
-        add(mini);
-        
-        JLabel bank = new JLabel("Indian Bank");
-        bank.setBounds(150, 20, 100, 20);
-        add(bank);
-        
-        JLabel card = new JLabel();
-        card.setBounds(20, 80, 300, 20);
-        add(card);
-        
-        JLabel balance=new JLabel();
-        balance.setBounds(20, 400, 300, 20);
-        add(balance);
-        
-        
-        try{
-            Conn conn = new Conn();
-            ResultSet rs = conn.s.executeQuery("select * from login where pin = '"+pinnumber+"'");
-            while(rs.next()){
-                card.setText("Card Number:    " + rs.getString("cardnumber").substring(0, 4) + "XXXXXXXX" + rs.getString("cardnumber").substring(12));
-            }
-        }catch(Exception e){}
-        	 
-        try{
-            int bal = 0;
-            Conn conn  = new Conn();
-            ResultSet rs = conn.s.executeQuery("SELECT * FROM bank where pin = '"+pinnumber+"'");
-            while(rs.next()){
-                mini.setText(mini.getText() + "<html>"+rs.getString("date")+ "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;" + rs.getString("mode") + "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;" + rs.getString("amount") + "<br><br><html>");
-                if(rs.getString("mode").equals("Deposit")){
-                    bal += Integer.parseInt(rs.getString("amount"));
-                }else{
-                    bal -= Integer.parseInt(rs.getString("amount"));
-                }
-            }
-            balance.setText("Your total Balance is Rs "+bal);
-        }catch(Exception e){
-            e.printStackTrace();
-        }
-        
-        setLayout(null);
-        b1 = new JButton("Exit");
-        add(b1);
-        
-        b1.addActionListener(this);
-        
-        mini.setBounds(20, 140, 400, 200);
-      
-    }
-    public void actionPerformed(ActionEvent ae){
-        this.setVisible(false);
-    }
-    
-    public static void main(String[] args){
-        new MiniStatement("").setVisible(true);
-    }
-    
-}*/
-//package bank.management.system;
-
 package bank.management.system;
 
 import java.awt.*;
@@ -86,74 +6,108 @@ import javax.swing.*;
 import java.sql.*;
 
 public class MiniStatement extends JFrame implements ActionListener {
-
-    JButton b1;
-    JLabel mini, bank, card, balance;
+    JButton exit;
+    JLabel card, balance, image;
+    String pinnumber;
 
     MiniStatement(String pinnumber) {
-        super("Mini Statement");
+        this.pinnumber = pinnumber;
         setLayout(null);
-        getContentPane().setBackground(Color.WHITE);
-        setSize(400, 600);
-        setLocation(20, 20);
 
-        // Labels for Mini Statement
-        mini = new JLabel();
-        mini.setBounds(20, 140, 400, 200);
-        add(mini);
+        // Background Image
+        ImageIcon i1 = new ImageIcon(ClassLoader.getSystemResource("bank/management/system/atm.jpg"));
+        Image i2 = i1.getImage().getScaledInstance(900, 900, Image.SCALE_DEFAULT);
+        ImageIcon i3 = new ImageIcon(i2);
+        image = new JLabel(i3);
+        image.setBounds(0, 0, 900, 900);
+        add(image);
 
-        bank = new JLabel("Indian Bank");
-        bank.setBounds(150, 20, 100, 20);
-        add(bank);
-
+        // Card Number Label
         card = new JLabel();
-        card.setBounds(20, 80, 300, 20);
-        add(card);
+        card.setForeground(Color.WHITE);
+        card.setFont(new Font("System", Font.BOLD, 16));
+        card.setBounds(170, 250, 400, 20);
+        image.add(card);
 
-        balance = new JLabel();
-        balance.setBounds(20, 400, 300, 20);
-        add(balance);
-
-        // Retrieve Card Number
+        // Fetch and Display Card Number
         try {
             Conn conn = new Conn();
-            ResultSet rs = conn.s.executeQuery("SELECT * FROM login WHERE pin = '" + pinnumber + "'");
-            while (rs.next()) {
-                card.setText("Card Number:    " + rs.getString("cardnumber").substring(0, 4) + "XXXXXXXX" + rs.getString("cardnumber").substring(12));
+            PreparedStatement stmt = conn.c.prepareStatement("SELECT cardNumber FROM login WHERE pinNumber = ?");
+            stmt.setString(1, pinnumber);
+            ResultSet rs = stmt.executeQuery();
+            
+            if (rs.next()) {
+                String cardNumber = rs.getString("cardNumber");
+                card.setText("Card Number: " + cardNumber.substring(0, 4) + "XXXXXXXX" + cardNumber.substring(12));
             }
+            rs.close();
+            stmt.close();
+            conn.c.close();
         } catch (Exception e) {
             e.printStackTrace();
         }
 
-        // Retrieve Mini Statement and Balance
+        // Transactions Label
+        JLabel text = new JLabel("Your Mini Statement");
+        text.setForeground(Color.WHITE);
+        text.setFont(new Font("System", Font.BOLD, 16));
+        text.setBounds(170, 300, 400, 20);
+        image.add(text);
+
+        JTextArea statementArea = new JTextArea();
+        statementArea.setFont(new Font("Raleway", Font.BOLD, 14));
+        statementArea.setBounds(170, 330, 320, 150);
+        statementArea.setBackground(Color.WHITE);
+        statementArea.setEditable(false);
+        image.add(statementArea);
+
+        // Fetch and Display Transactions
         try {
-            int bal = 0;
             Conn conn = new Conn();
-            ResultSet rs = conn.s.executeQuery("SELECT * FROM bank WHERE pinnumber = '" + pinnumber + "' ORDER BY transaction_date DESC");
+            int bal = 0;
+            PreparedStatement stmt = conn.c.prepareStatement("SELECT transaction_date, transaction_type, amount FROM bank WHERE pinnumber = ? ORDER BY transaction_date DESC LIMIT 10");
+            stmt.setString(1, pinnumber);
+            ResultSet rs = stmt.executeQuery();
+            
             StringBuilder statement = new StringBuilder();
             while (rs.next()) {
-                statement.append("<html>")
-                         .append(rs.getString("transaction_date")).append("&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;")
-                         .append(rs.getString("transaction_type")).append("&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;")
-                         .append(rs.getString("amount")).append("<br><br><html>");
+                statement.append(rs.getString("transaction_date")).append("  ")
+                         .append(rs.getString("transaction_type")).append("  Rs.")
+                         .append(rs.getInt("amount")).append("\n");
                 
-                if (rs.getString("transaction_type").equals("Deposit")) {
-                    bal += Integer.parseInt(rs.getString("amount"));
+                if (rs.getString("transaction_type").equalsIgnoreCase("Withdraw")) {
+                    bal -= rs.getInt("amount");
                 } else {
-                    bal -= Integer.parseInt(rs.getString("amount"));
+                    bal += rs.getInt("amount");
                 }
             }
-            mini.setText(statement.toString());
-            balance.setText("Your total Balance is Rs " + bal);
+            
+            statementArea.setText(statement.toString());
+            rs.close();
+            stmt.close();
+            conn.c.close();
         } catch (Exception e) {
             e.printStackTrace();
         }
 
-        // Exit button
-        b1 = new JButton("Exit");
-        b1.setBounds(150, 500, 100, 30);
-        b1.addActionListener(this);
-        add(b1);
+        // Balance Label
+        balance = new JLabel();
+        balance.setForeground(Color.WHITE);
+        balance.setFont(new Font("System", Font.BOLD, 16));
+        balance.setBounds(170, 500, 400, 20);
+        image.add(balance);
+        balance.setText("Your Balance: Updating...");
+        
+        // Exit Button
+        exit = new JButton("EXIT");
+        exit.setBounds(355, 550, 150, 30);
+        exit.addActionListener(this);
+        image.add(exit);
+
+        setSize(900, 900);
+        setUndecorated(true);
+        setLocation(500, 0);
+        setVisible(true);
     }
 
     public void actionPerformed(ActionEvent ae) {
@@ -161,6 +115,6 @@ public class MiniStatement extends JFrame implements ActionListener {
     }
 
     public static void main(String[] args) {
-        new MiniStatement("1234").setVisible(true); // Provide a valid pin for testing
+        new MiniStatement("1234").setVisible(true);
     }
 }
